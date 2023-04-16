@@ -137,7 +137,7 @@ fn transmute_lmr_to_response(lmr: &LocalMr) -> Response {
 async fn main() {
     tracing_subscriber::fmt::init();
     //run rpc server
-    Server::start("localhost:5555").await;
+    Server::start("192.168.1.71:5555").await;
     println!("rpc server started");
     // //sleep for a second to wait for the server to start
     // tokio::time::sleep(Duration::new(1, 0)).await;
