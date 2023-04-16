@@ -1,4 +1,5 @@
 [workspace]
 members = [
+    "src/async_rdma",
     "src/server",
 ]

@@ -260,18 +260,18 @@ impl Client {
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
-    //run rpc server
-    Server::start("localhost:5555");
-    println!("rpc server started");
-    // //sleep for a second to wait for the server to start
-    // tokio::time::sleep(Duration::new(1, 0)).await;
-    // let request = Request::Add { arg1: 1, arg2: 1 };
-    // let client = Client::new("localhost:5555").await;
-    // println!("request: {:?}", request);
-    // let res = client.handle_req_sr(request).await;
-    // println!("response: {:?}", res);
-    // let request = Request::Add { arg1: 2, arg2: 2 };
-    // println!("request: {:?}", request);
-    // let res = client.handle_req_wr(request).await;
-    // println!("response: {:?}", res);
+    // //run rpc server
+    // std::thread::spawn(|| Server::start("localhost:5555"));
+    // println!("rpc server started");
+    //sleep for a second to wait for the server to start
+    tokio::time::sleep(Duration::new(1, 0)).await;
+    let request = Request::Add { arg1: 1, arg2: 1 };
+    let client = Client::new("192.168.1.71:5555").await;
+    println!("request: {:?}", request);
+    let res = client.handle_req_sr(request).await;
+    println!("response: {:?}", res);
+    let request = Request::Add { arg1: 2, arg2: 2 };
+    println!("request: {:?}", request);
+    let res = client.handle_req_wr(request).await;
+    println!("response: {:?}", res);
 }

@@ -11,9 +11,13 @@ name = "server"
 path = "src/server.rs"
 
 
+[[bin]]
+name = "client"
+path = "src/client.rs"
+
 
 [dependencies]
+async-rdma = {path = "../async_rdma"}
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.8"
-async-rdma = "0.1"
