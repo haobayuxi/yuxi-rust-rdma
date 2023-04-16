@@ -267,11 +267,11 @@ async fn main() {
     tokio::time::sleep(Duration::new(1, 0)).await;
     let request = Request::Add { arg1: 1, arg2: 1 };
     let client = Client::new("192.168.1.71:5555").await;
-    println!("request: {:?}", request);
-    let start = Instant::now();
-    let res = client.handle_req_sr(request).await;
-    let end = start.elapsed().as_micros();
-    println!("response: {:?} = {}", res, end);
+    // println!("request: {:?}", request);
+    // let start = Instant::now();
+    // let res = client.handle_req_sr(request).await;
+    // let end = start.elapsed().as_micros();
+    // println!("response: {:?} = {}", res, end);
     let request = Request::Add { arg1: 2, arg2: 2 };
     println!("request: {:?}", request);
     let start = Instant::now();

@@ -31,9 +31,9 @@ impl Server {
         // wait for client to connect
         let rdma = Arc::new(RdmaBuilder::default().listen(addr).await.unwrap());
         // run rpc task loop
-        let sr_handler = tokio::spawn(Self::sr_task(rdma.clone()));
-        // let wr_handler = tokio::spawn(Self::wr_task(rdma));
-        sr_handler.await.unwrap();
+        // let sr_handler = tokio::spawn(Self::sr_task(rdma.clone()));
+        // // let wr_handler = tokio::spawn(Self::wr_task(rdma));
+        // sr_handler.await.unwrap();
         // wr_handler.await.unwrap();
         Self::wr_task(rdma).await;
     }
