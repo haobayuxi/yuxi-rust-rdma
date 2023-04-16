@@ -21,3 +21,5 @@ async-rdma = {path = "../async_rdma"}
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.8"
+tracing = "0.1"
+tracing-subscriber = "0.3.9"
