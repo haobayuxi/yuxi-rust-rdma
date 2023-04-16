@@ -26,7 +26,7 @@ enum Response {
 /// Rpc server
 struct Server {}
 impl Server {
-    #[tokio::main]
+    // #[tokio::main]
     async fn start<A: ToSocketAddrs>(addr: A) {
         // wait for client to connect
         let rdma = Arc::new(RdmaBuilder::default().listen(addr).await.unwrap());
