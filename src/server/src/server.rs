@@ -35,7 +35,7 @@ impl Server {
         // let wr_handler = tokio::spawn(Self::wr_task(rdma));
         sr_handler.await.unwrap();
         // wr_handler.await.unwrap();
-        Self::wr_task(rdma);
+        Self::wr_task(rdma).await;
     }
 
     /// Server can't aware of rdma `read` or `write`, so we need sync with client
