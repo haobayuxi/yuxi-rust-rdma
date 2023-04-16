@@ -274,6 +274,8 @@ async fn main() {
     println!("response: {:?} = {}", res, end);
     let request = Request::Add { arg1: 2, arg2: 2 };
     println!("request: {:?}", request);
+    let start = Instant::now();
     let res = client.handle_req_wr(request).await;
-    println!("response: {:?}", res);
+    let end = start.elapsed().as_micros();
+    println!("response: {:?} = {}", res, end);
 }
