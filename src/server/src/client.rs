@@ -23,105 +23,6 @@ enum Response {
     Sync,
 }
 
-/// Rpc server
-struct Server {}
-impl Server {
-    #[tokio::main]
-    async fn start<A: ToSocketAddrs>(addr: A) {
-        // wait for client to connect
-        let rdma = Arc::new(RdmaBuilder::default().listen(addr).await.unwrap());
-        // run rpc task loop
-        let sr_handler = tokio::spawn(Self::sr_task(rdma.clone()));
-        let wr_handler = tokio::spawn(Self::wr_task(rdma));
-        sr_handler.await.unwrap();
-        wr_handler.await.unwrap();
-    }
-
-    /// Server can't aware of rdma `read` or `write`, so we need sync with client
-    /// before client `read` and after `write`.
-    async fn sync_with_client(rdma: &Rdma) {
-        let mut lmr_sync = rdma
-            .alloc_local_mr(Layout::new::<Request>())
-            .map_err(|err| println!("{}", &err))
-            .unwrap();
-        //write data to lmr
-        unsafe { *(*lmr_sync.as_mut_ptr() as *mut Request) = Request::Sync };
-        rdma.send(&lmr_sync)
-            .await
-            .map_err(|err| println!("{}", &err))
-            .unwrap();
-    }
-
-    /// Loop used to process rpc requests powered by rdma 'read' and 'write'
-    async fn wr_task(rdma: Arc<Rdma>) {
-        loop {
-            // receive a lmr which was requested by client to `write` `Requests`
-            let lmr_req = rdma
-                .receive_local_mr()
-                .await
-                .map_err(|err| println!("{}", &err))
-                .unwrap();
-            Self::sync_with_client(&rdma).await;
-            let resp = unsafe {
-                // get 'Request' from lmr
-                let req = &*(*lmr_req.as_ptr() as *const Request);
-                Self::process_request(req)
-            };
-            // alloc a lmr for client to 'read' 'Response'
-            let mut lmr_resp = rdma
-                .alloc_local_mr(Layout::new::<Response>())
-                .map_err(|err| println!("{}", &err))
-                .unwrap();
-            // put 'Response' into lmr
-            unsafe { *(*lmr_resp.as_mut_ptr() as *mut Response) = resp };
-            Self::sync_with_client(&rdma).await;
-            // send the metadata of lmr to client to 'read'
-            rdma.send_local_mr(lmr_resp)
-                .await
-                .map_err(|err| println!("{}", &err))
-                .unwrap();
-        }
-    }
-    /// Loop used to process rpc requests powered by rdma 'send' and 'receive'
-    async fn sr_task(rdma: Arc<Rdma>) {
-        loop {
-            // wait for the `send` request sent by client
-            let resp = rdma
-                .receive()
-                .await
-                .map(|lmr_req| unsafe {
-                    //get `Request` from mr
-                    let req = &*(*lmr_req.as_ptr() as *const Request);
-                    Self::process_request(req)
-                })
-                .map_err(|err| println!("{}", &err))
-                .unwrap();
-            let mut lmr_resp = rdma
-                .alloc_local_mr(Layout::new::<Response>())
-                .map_err(|err| println!("{}", &err))
-                .unwrap();
-            // put `Response` into a new mr and send it to client
-            unsafe { *(*lmr_resp.as_mut_ptr() as *mut Response) = resp };
-            rdma.send(&lmr_resp)
-                .await
-                .map_err(|err| println!("{}", &err))
-                .unwrap();
-        }
-    }
-    /// Process `Add` rpc
-    fn add(arg1: &u32, arg2: &u32) -> Response {
-        Response::Add { res: *arg1 + *arg2 }
-    }
-
-    /// Process request and return the response
-    fn process_request(req: &Request) -> Response {
-        match req {
-            Request::Add { arg1, arg2 } => Self::add(arg1, arg2),
-            Request::Sync => Response::Sync,
-        }
-    }
-}
-
 fn transmute_lmr_to_response(lmr: &LocalMr) -> Response {
     unsafe {
         let resp = &*(*lmr.as_ptr() as *const Response);
@@ -266,7 +167,7 @@ async fn main() {
     //sleep for a second to wait for the server to start
     // tokio::time::sleep(Duration::new(1, 0)).await;
     let request = Request::Add { arg1: 1, arg2: 1 };
-    let client = Client::new("192.168.1.71:5555").await;
+    let client = Client::new("192.168.3.71:5555").await;
     // println!("request: {:?}", request);
     // let start = Instant::now();
     // let res = client.handle_req_sr(request).await;

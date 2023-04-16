@@ -35,54 +35,54 @@ impl Server {
         // // let wr_handler = tokio::spawn(Self::wr_task(rdma));
         // sr_handler.await.unwrap();
         // wr_handler.await.unwrap();
-        Self::wr_task(rdma).await;
+        Self::sr_task(rdma).await;
     }
 
     /// Server can't aware of rdma `read` or `write`, so we need sync with client
-    /// before client `read` and after `write`.
-    async fn sync_with_client(rdma: &Rdma) {
-        let mut lmr_sync = rdma
-            .alloc_local_mr(Layout::new::<Request>())
-            .map_err(|err| println!("{}", &err))
-            .unwrap();
-        //write data to lmr
-        unsafe { *(*lmr_sync.as_mut_ptr() as *mut Request) = Request::Sync };
-        rdma.send(&lmr_sync)
-            .await
-            .map_err(|err| println!("{}", &err))
-            .unwrap();
-    }
+    // /// before client `read` and after `write`.
+    // async fn sync_with_client(rdma: &Rdma) {
+    //     let mut lmr_sync = rdma
+    //         .alloc_local_mr(Layout::new::<Request>())
+    //         .map_err(|err| println!("{}", &err))
+    //         .unwrap();
+    //     //write data to lmr
+    //     unsafe { *(*lmr_sync.as_mut_ptr() as *mut Request) = Request::Sync };
+    //     rdma.send(&lmr_sync)
+    //         .await
+    //         .map_err(|err| println!("{}", &err))
+    //         .unwrap();
+    // }
 
     /// Loop used to process rpc requests powered by rdma 'read' and 'write'
-    async fn wr_task(rdma: Arc<Rdma>) {
-        loop {
-            // receive a lmr which was requested by client to `write` `Requests`
-            let lmr_req = rdma
-                .receive_local_mr()
-                .await
-                .map_err(|err| println!("{}", &err))
-                .unwrap();
-            Self::sync_with_client(&rdma).await;
-            let resp = unsafe {
-                // get 'Request' from lmr
-                let req = &*(*lmr_req.as_ptr() as *const Request);
-                Self::process_request(req)
-            };
-            // alloc a lmr for client to 'read' 'Response'
-            let mut lmr_resp = rdma
-                .alloc_local_mr(Layout::new::<Response>())
-                .map_err(|err| println!("{}", &err))
-                .unwrap();
-            // put 'Response' into lmr
-            unsafe { *(*lmr_resp.as_mut_ptr() as *mut Response) = resp };
-            Self::sync_with_client(&rdma).await;
-            // send the metadata of lmr to client to 'read'
-            rdma.send_local_mr(lmr_resp)
-                .await
-                .map_err(|err| println!("{}", &err))
-                .unwrap();
-        }
-    }
+    // async fn wr_task(rdma: Arc<Rdma>) {
+    //     loop {
+    //         // receive a lmr which was requested by client to `write` `Requests`
+    //         let lmr_req = rdma
+    //             .receive_local_mr()
+    //             .await
+    //             .map_err(|err| println!("{}", &err))
+    //             .unwrap();
+    //         Self::sync_with_client(&rdma).await;
+    //         let resp = unsafe {
+    //             // get 'Request' from lmr
+    //             let req = &*(*lmr_req.as_ptr() as *const Request);
+    //             Self::process_request(req)
+    //         };
+    //         // alloc a lmr for client to 'read' 'Response'
+    //         let mut lmr_resp = rdma
+    //             .alloc_local_mr(Layout::new::<Response>())
+    //             .map_err(|err| println!("{}", &err))
+    //             .unwrap();
+    //         // put 'Response' into lmr
+    //         unsafe { *(*lmr_resp.as_mut_ptr() as *mut Response) = resp };
+    //         Self::sync_with_client(&rdma).await;
+    //         // send the metadata of lmr to client to 'read'
+    //         rdma.send_local_mr(lmr_resp)
+    //             .await
+    //             .map_err(|err| println!("{}", &err))
+    //             .unwrap();
+    //     }
+    // }
     /// Loop used to process rpc requests powered by rdma 'send' and 'receive'
     async fn sr_task(rdma: Arc<Rdma>) {
         loop {
@@ -137,7 +137,7 @@ fn transmute_lmr_to_response(lmr: &LocalMr) -> Response {
 async fn main() {
     tracing_subscriber::fmt::init();
     //run rpc server
-    Server::start("192.168.1.71:5555").await;
+    Server::start("192.168.3.71:5555").await;
     println!("rpc server started");
     // //sleep for a second to wait for the server to start
     // tokio::time::sleep(Duration::new(1, 0)).await;
